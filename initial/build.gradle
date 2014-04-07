@@ -1,0 +1,38 @@
+ext {
+	reactorVersion = '1.1.0.BUILD-SNAPSHOT'
+}
+
+buildscript {
+	repositories {
+		maven { url "http://repo.spring.io/libs-snapshot" }
+		mavenLocal()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:1.0.1.RELEASE")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'spring-boot'
+
+jar {
+	baseName = 'gs-reactor-thumbnailer'
+	version = '0.1.0'
+}
+
+repositories {
+	mavenCentral()
+	maven { url "http://repo.spring.io/libs-snapshot" }
+}
+
+dependencies {
+	compile "org.springframework.boot:spring-boot-starter",
+			"org.projectreactor:reactor-net:$reactorVersion",
+			"org.projectreactor.spring:reactor-spring-context:$reactorVersion"
+}
+
+task wrapper(type: Wrapper) {
+	gradleVersion = '1.11'
+}

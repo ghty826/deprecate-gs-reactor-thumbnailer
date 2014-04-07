@@ -1,7 +1,10 @@
 package org.projectreactor.examples.thumbnailer;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponse;
 import org.projectreactor.examples.thumbnailer.service.ImageThumbnailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.Reactor;
@@ -9,13 +12,17 @@ import reactor.event.Event;
 import reactor.spring.context.annotation.Consumer;
 import reactor.spring.context.annotation.ReplyTo;
 import reactor.spring.context.annotation.Selector;
-import reactor.spring.context.annotation.SelectorType;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
+
+import static io.netty.handler.codec.http.HttpHeaders.Names.*;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import static reactor.spring.context.annotation.SelectorType.URI;
 
 /**
  * @author Jon Brisbin
@@ -36,7 +43,7 @@ public class RestApiHandler {
 		this.thumbnailer = thumbnailer;
 	}
 
-	@Selector(value = "/img/thumbnail.jpg", type = SelectorType.URI)
+	@Selector(value = "/img/thumbnail.jpg", type = URI)
 	@ReplyTo
 	public HttpResponse serveImage(Event<FullHttpRequest> ev) throws IOException {
 		if (ev.getData().getMethod() != HttpMethod.GET) {
@@ -45,7 +52,7 @@ public class RestApiHandler {
 		return serveImage(thumbnail);
 	}
 
-	@Selector(value = "/thumbnail", type = SelectorType.URI)
+	@Selector(value = "/thumbnail", type = URI)
 	@ReplyTo
 	public HttpResponse thumbnailImage(Event<FullHttpRequest> ev) throws Exception {
 		if (ev.getData().getMethod() != HttpMethod.POST) {
@@ -61,7 +68,7 @@ public class RestApiHandler {
 		return redirect();
 	}
 
-	@Selector(value = "/shutdown", type = SelectorType.URI)
+	@Selector(value = "/shutdown", type = URI)
 	@ReplyTo
 	public HttpResponse shutdown() {
 		closeLatch.countDown();
@@ -81,36 +88,32 @@ public class RestApiHandler {
 	}
 
 	private static HttpResponse ok() {
-		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-		                                                           HttpResponseStatus.OK);
+		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HTTP_1_1, OK);
 		resp.headers().set("Content-Length", 0);
 		return resp;
 	}
 
 	private static HttpResponse badRequest(String msg) {
-		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-		                                                           HttpResponseStatus.BAD_REQUEST);
+		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HTTP_1_1, BAD_REQUEST);
 		resp.content().writeBytes(msg.getBytes());
-		resp.headers().set(HttpHeaders.Names.CONTENT_TYPE, "text/plain");
-		resp.headers().set(HttpHeaders.Names.CONTENT_LENGTH, resp.content().readableBytes());
+		resp.headers().set(CONTENT_TYPE, "text/plain");
+		resp.headers().set(CONTENT_LENGTH, resp.content().readableBytes());
 		return resp;
 	}
 
 	private static HttpResponse redirect() {
-		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-		                                                           HttpResponseStatus.MOVED_PERMANENTLY);
-		resp.headers().set(HttpHeaders.Names.CONTENT_LENGTH, 0);
-		resp.headers().set(HttpHeaders.Names.LOCATION, "/img/thumbnail.jpg");
+		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HTTP_1_1, MOVED_PERMANENTLY);
+		resp.headers().set(CONTENT_LENGTH, 0);
+		resp.headers().set(LOCATION, "/img/thumbnail.jpg");
 		return resp;
 	}
 
 	private static HttpResponse serveImage(Path path) throws IOException {
-		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-		                                                           HttpResponseStatus.OK);
+		DefaultFullHttpResponse resp = new DefaultFullHttpResponse(HTTP_1_1, OK);
 
 		RandomAccessFile f = new RandomAccessFile(path.toString(), "r");
-		resp.headers().set(HttpHeaders.Names.CONTENT_TYPE, "image/jpeg");
-		resp.headers().set(HttpHeaders.Names.CONTENT_LENGTH, f.length());
+		resp.headers().set(CONTENT_TYPE, "image/jpeg");
+		resp.headers().set(CONTENT_LENGTH, f.length());
 
 		byte[] bytes = Files.readAllBytes(path);
 		resp.content().writeBytes(bytes);
