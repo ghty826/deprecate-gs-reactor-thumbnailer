@@ -1,0 +1,14 @@
+---
+tags: [reactor, rest, netty]
+projects: [spring-boot]
+---
+:spring_version: current
+:spring_boot_version: 1.0.1.RELEASE
+:Component: http://docs.spring.io/spring/docs/{spring_version}/javadoc-api/org/springframework/stereotype/Component.html
+:EnableAutoConfiguration: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/autoconfigure/EnableAutoConfiguration.html
+:SpringApplication: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/SpringApplication.html
+:toc:
+:icons: font
+:source-highlighter: prettify
+:project_id: gs-reactor-thumbnailer
+This guide walks you through the process of creating a RESTful image thumbnailing service using Spring Boot, Reactor, and Netty.
