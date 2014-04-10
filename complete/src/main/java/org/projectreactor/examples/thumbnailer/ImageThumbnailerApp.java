@@ -4,6 +4,8 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import org.projectreactor.examples.thumbnailer.service.GraphicsMagickThumbnailService;
+import org.projectreactor.examples.thumbnailer.service.ImageThumbnailService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -25,14 +27,20 @@ import java.util.concurrent.CountDownLatch;
 
 /**
  * Simple Spring Boot app to start a Reactor+Netty-based REST API server for thumbnailing uploaded images.
- *
- * @author Jon Brisbin
  */
 @EnableAutoConfiguration
 @Configuration
-@EnableReactor
 @ComponentScan
+@EnableReactor
 public class ImageThumbnailerApp {
+
+	@Bean
+	public ImageThumbnailService imageThumbnailService() {
+		// Prefer the GraphicsMagick version because it's better
+		//  but use the below if the "gm" command isn't available on your system.
+		//return new BufferedImageThumbnailService();
+		return new GraphicsMagickThumbnailService();
+	}
 
 	@Bean
 	public Reactor reactor(Environment env) {
@@ -58,8 +66,9 @@ public class ImageThumbnailerApp {
 		NetServer<FullHttpRequest, FullHttpResponse> server = new TcpServerSpec<FullHttpRequest, FullHttpResponse>(
 				NettyTcpServer.class)
 				.env(env).dispatcher("sync").options(opts)
-				.consume(ch -> ch.when(Throwable.class, new RestApiErrorHandler(ch))
+				.consume(ch -> ch.when(Throwable.class, new HttpErrorHandler(ch))
 				                 .consume(req -> {
+					                 // event source requests
 					                 reactor.sendAndReceive(req.getUri(),
 					                                        Event.wrap(req),
 					                                        (Event<FullHttpResponse> ev) -> ch.send(ev.getData()));
@@ -73,8 +82,11 @@ public class ImageThumbnailerApp {
 
 	public static void main(String... args) throws InterruptedException {
 		ApplicationContext ctx = SpringApplication.run(ImageThumbnailerApp.class, args);
+
+		// Reactor's TCP servers are non-blocking so we have to do something to keep from exiting the main thread
 		CountDownLatch closeLatch = ctx.getBean(CountDownLatch.class);
 		closeLatch.await();
+
 		ctx.getBean(NetServer.class).shutdown().await();
 	}
 

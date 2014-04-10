@@ -3,10 +3,13 @@ tags: [reactor, rest, netty]
 projects: [reactor]
 ---
 :spring_version: current
+:java_version: 1.8
 :spring_boot_version: 1.0.1.RELEASE
+:GraphicsMagick: http://www.graphicsmagick.org/
 :Component: http://docs.spring.io/spring/docs/{spring_version}/javadoc-api/org/springframework/stereotype/Component.html
 :EnableAutoConfiguration: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/autoconfigure/EnableAutoConfiguration.html
 :SpringApplication: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/SpringApplication.html
+:Path: http://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html
 :toc:
 :icons: font
 :source-highlighter: prettify
@@ -42,4 +45,75 @@ include::initial/build.gradle[]
 ----
 
 include::https://raw.github.com/spring-guides/getting-started-macros/master/spring-boot-gradle-plugin.adoc[]
+
+You'll need to download an image from Google Images or Flickr or find a JPEG image you have on local hard drive. It should be larger than 250px on the long side, as this example will thumbnail images to 250px.
+
+[[initial]]
+== Add Reactor support
+
+The first thing we need to do is add Reactor support to our Spring Boot application. Reactor has an `@EnableRector` annotation that makes it easy to bootstrap Reactor components in a Spring `ApplicationContext`. Just add the annotation to your `@Configuration` class.
+
+`src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerApp.java`
+[source,java]
+----
+import reactor.spring.context.config.EnableReactor;
+
+@EnableAutoConfiguration
+@Configuration
+@ComponentScan
+@EnableReactor
+public class ImageThumbnailerApp {
+
+	public static void main(String... args) throws InterruptedException {
+		ApplicationContext ctx = SpringApplication.run(ImageThumbnailerApp.class, args);
+	}
+
+}
+----
+
+This adds a shared `Environment` instance to your `ApplicationContext` so that you don't have to create one. It also provides some scanning componentry that will automatically wire beans marked with the `@Consumer` annotation to a `Reactor` by attaching a `Consumer` for each method annotated with the `@Selector` annotation.
+
+== Create a ThumbnailService
+
+We want to delegate the actual thumbnailing of the image to different implementations depending on the environment we're running this example in. If you're on a UNIX-based system and have the {GraphicsMagick}[GraphicsMagick] programs installed, then we can use that excellent image manipulation software to do the thumbnails. If not, then we can use the JDK tools for resizing an image--though the quality of those thumbnails will be drastically less than by using GraphicsMagick.
+
+Create a very simple interface that accepts a {Path}[`Path`] to the uploaded image and returns a `Path` to the thumbnailed version.
+
+`src/main/java/org/projectreactor/examples/thumbnailer/service/ImageThumbnailService.java`
+[source,java]
+----
+include::complete/src/main/java/org/projectreactor/examples/thumbnailer/service/ImageThumbnailService.java[]
+----
+
+To implement this using GraphicsMagick, we'll use the `gm4java` utility, which just calls the GraphicsMagick CLI to do the actual work.
+
+`src/main/java/org/projectreactor/examples/thumbnailer/service/GraphicsMagickThumbnailService.java`
+[source,java]
+----
+include::complete/src/main/java/org/projectreactor/examples/thumbnailer/service/GraphicsMagickThumbnailService.java[]
+----
+
+If you don't have access to the GraphicsMagick utilities, you can use the JDK's built-in Java2D image-handling library to do the resizing (though expect a very ragged-looking result).
+
+`src/main/java/org/projectreactor/examples/thumbnailer/service/BufferedImageThumbnailService.java`
+[source,java]
+----
+include::complete/src/main/java/org/projectreactor/examples/thumbnailer/service/BufferedImageThumbnailService.java[]
+----
+
+== Create the Event Handler
+
+We'll be reading images from our incoming POST requests and using a multi-threaded `Reactor` to handle HTTP requests asynchronously using an event bus or event source style.
+
+To do that we need to create a bean that can be found via component scanning that is marked with the `@Consumer` annotation (which is also a `@Component`, so no need to put both annotations on the bean to have it picked up). Create a method to handle the POST thumbnail request which returns a Netty `FullHttpResponse`.
+
+Note: We'll be expecting raw binary data (not urlencoded like in an upload form) so you'll need to use a command-line tool like `curl` to POST the image to the server.
+
+While we're at it, we'll add a method to serve the image back via GET and to shutdown the server using a REST request.
+
+`src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailRequestHandler.java`
+[source,java]
+----
+include::complete/src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailRequestHandler.java[]
+----
 

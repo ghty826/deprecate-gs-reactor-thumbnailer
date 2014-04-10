@@ -8,7 +8,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import org.projectreactor.examples.thumbnailer.service.ImageThumbnailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.Reactor;
-import reactor.event.Event;
 import reactor.spring.context.annotation.Consumer;
 import reactor.spring.context.annotation.ReplyTo;
 import reactor.spring.context.annotation.Selector;
@@ -25,10 +24,10 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static reactor.spring.context.annotation.SelectorType.URI;
 
 /**
- * @author Jon Brisbin
+ * A simple bean to handle incoming thumbnail requests.
  */
 @Consumer
-public class RestApiHandler {
+public class ImageThumbnailRequestHandler {
 
 	private final Reactor               reactor;
 	private final CountDownLatch        closeLatch;
@@ -37,7 +36,7 @@ public class RestApiHandler {
 	private volatile Path thumbnail;
 
 	@Autowired
-	public RestApiHandler(Reactor reactor, CountDownLatch closeLatch, ImageThumbnailService thumbnailer) {
+	public ImageThumbnailRequestHandler(Reactor reactor, CountDownLatch closeLatch, ImageThumbnailService thumbnailer) {
 		this.reactor = reactor;
 		this.closeLatch = closeLatch;
 		this.thumbnailer = thumbnailer;
@@ -45,22 +44,22 @@ public class RestApiHandler {
 
 	@Selector(value = "/img/thumbnail.jpg", type = URI)
 	@ReplyTo
-	public HttpResponse serveImage(Event<FullHttpRequest> ev) throws IOException {
-		if (ev.getData().getMethod() != HttpMethod.GET) {
-			return badRequest(ev.getData().getMethod() + " not supported for this URI");
+	public HttpResponse serveImage(FullHttpRequest req) throws IOException {
+		if (req.getMethod() != HttpMethod.GET) {
+			return badRequest(req.getMethod() + " not supported for this URI");
 		}
 		return serveImage(thumbnail);
 	}
 
 	@Selector(value = "/thumbnail", type = URI)
 	@ReplyTo
-	public HttpResponse thumbnailImage(Event<FullHttpRequest> ev) throws Exception {
-		if (ev.getData().getMethod() != HttpMethod.POST) {
-			return badRequest(ev.getData().getMethod() + " not supported for this URI");
+	public HttpResponse thumbnailImage(FullHttpRequest req) throws Exception {
+		if (req.getMethod() != HttpMethod.POST) {
+			return badRequest(req.getMethod() + " not supported for this URI");
 		}
 
 		// write to a temp file
-		Path imgIn = readUpload(ev.getData().content());
+		Path imgIn = readUpload(req.content());
 
 		// thumbnail the image to 250px on the long side
 		thumbnail = thumbnailer.thumbnailImage(imgIn, 250);
@@ -83,6 +82,8 @@ public class RestApiHandler {
 		// write to a temp file
 		Path imgIn = Files.createTempFile("upload", ".jpg");
 		Files.write(imgIn, bytes);
+
+		imgIn.toFile().deleteOnExit();
 
 		return imgIn;
 	}

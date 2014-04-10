@@ -7,11 +7,11 @@ import reactor.net.NetChannel;
 /**
  * @author Jon Brisbin
  */
-class RestApiErrorHandler implements Consumer<Throwable> {
+class HttpErrorHandler implements Consumer<Throwable> {
 
 	private final NetChannel<FullHttpRequest, FullHttpResponse> channel;
 
-	public RestApiErrorHandler(NetChannel<FullHttpRequest, FullHttpResponse> channel) {
+	public HttpErrorHandler(NetChannel<FullHttpRequest, FullHttpResponse> channel) {
 		this.channel = channel;
 	}
 
