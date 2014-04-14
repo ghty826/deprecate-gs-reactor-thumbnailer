@@ -16,8 +16,8 @@ import reactor.spring.context.config.EnableReactor;
 @EnableReactor
 public class ImageThumbnailerApp {
 
-	public static void main(String... args) throws InterruptedException {
-		ApplicationContext ctx = SpringApplication.run(ImageThumbnailerApp.class, args);
-	}
+  public static void main(String... args) throws InterruptedException {
+    ApplicationContext ctx = SpringApplication.run(ImageThumbnailerApp.class, args);
+  }
 
 }

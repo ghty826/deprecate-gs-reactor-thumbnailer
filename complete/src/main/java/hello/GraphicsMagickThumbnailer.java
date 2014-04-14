@@ -19,44 +19,44 @@ import java.nio.file.Path;
  */
 class GraphicsMagickThumbnailer implements Function<Event<Path>, Path> {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+  private final Logger log = LoggerFactory.getLogger(getClass());
 
-	private final int             maxLongSide;
-	private final PooledGMService gm;
+  private final int             maxLongSide;
+  private final PooledGMService gm;
 
-	public GraphicsMagickThumbnailer(int maxLongSide) {
-		this.maxLongSide = maxLongSide;
-		GMConnectionPoolConfig config = new GMConnectionPoolConfig();
-		this.gm = new PooledGMService(config);
-	}
+  public GraphicsMagickThumbnailer(int maxLongSide) {
+    this.maxLongSide = maxLongSide;
+    GMConnectionPoolConfig config = new GMConnectionPoolConfig();
+    this.gm = new PooledGMService(config);
+  }
 
-	@Override
-	public Path apply(Event<Path> ev) {
-		try {
-			Path srcPath = ev.getData();
-			Path thumbnailPath = Files.createTempFile("thumbnail", ".jpg").toAbsolutePath();
-			BufferedImage imgIn = ImageIO.read(srcPath.toFile());
+  @Override
+  public Path apply(Event<Path> ev) {
+    try {
+      Path srcPath = ev.getData();
+      Path thumbnailPath = Files.createTempFile("thumbnail", ".jpg").toAbsolutePath();
+      BufferedImage imgIn = ImageIO.read(srcPath.toFile());
 
-			double scale;
-			if (imgIn.getWidth() >= imgIn.getHeight()) {
-				// horizontal or square image
-				scale = Math.min(maxLongSide, imgIn.getWidth()) / (double) imgIn.getWidth();
-			} else {
-				// vertical image
-				scale = Math.min(maxLongSide, imgIn.getHeight()) / (double) imgIn.getHeight();
-			}
+      double scale;
+      if (imgIn.getWidth() >= imgIn.getHeight()) {
+        // horizontal or square image
+        scale = Math.min(maxLongSide, imgIn.getWidth()) / (double) imgIn.getWidth();
+      } else {
+        // vertical image
+        scale = Math.min(maxLongSide, imgIn.getHeight()) / (double) imgIn.getHeight();
+      }
 
-			gm.execute("convert",
-			           srcPath.toString(),
-			           "-resize", Math.round(100 * scale) + "%",
-			           thumbnailPath.toString());
+      gm.execute("convert",
+                 srcPath.toString(),
+                 "-resize", Math.round(100 * scale) + "%",
+                 thumbnailPath.toString());
 
-			log.info("Image thumbnail now at: {}", thumbnailPath);
+      log.info("Image thumbnail now at: {}", thumbnailPath);
 
-			return thumbnailPath;
-		} catch (Exception e) {
-			throw new IllegalStateException(e.getMessage(), e);
-		}
-	}
+      return thumbnailPath;
+    } catch (Exception e) {
+      throw new IllegalStateException(e.getMessage(), e);
+    }
+  }
 
 }
