@@ -4,8 +4,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import org.projectreactor.examples.thumbnailer.service.GraphicsMagickThumbnailService;
-import org.projectreactor.examples.thumbnailer.service.ImageThumbnailService;
+import org.projectreactor.examples.thumbnailer.service.GraphicsMagickThumbnailer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -14,8 +13,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import reactor.core.Environment;
 import reactor.core.Reactor;
+import reactor.core.composable.Stream;
 import reactor.core.spec.Reactors;
-import reactor.event.Event;
 import reactor.net.NetServer;
 import reactor.net.config.ServerSocketOptions;
 import reactor.net.netty.NettyServerSocketOptions;
@@ -23,7 +22,12 @@ import reactor.net.netty.tcp.NettyTcpServer;
 import reactor.net.tcp.spec.TcpServerSpec;
 import reactor.spring.context.config.EnableReactor;
 
+import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.projectreactor.examples.thumbnailer.ImageThumbnailerRestApi.*;
+import static reactor.event.selector.Selectors.$;
 
 /**
  * Simple Spring Boot app to start a Reactor+Netty-based REST API server for thumbnailing uploaded images.
@@ -35,16 +39,10 @@ import java.util.concurrent.CountDownLatch;
 public class ImageThumbnailerApp {
 
 	@Bean
-	public ImageThumbnailService imageThumbnailService() {
-		// Prefer the GraphicsMagick version because it's better
-		//  but use the below if the "gm" command isn't available on your system.
-		//return new BufferedImageThumbnailService();
-		return new GraphicsMagickThumbnailService();
-	}
-
-	@Bean
 	public Reactor reactor(Environment env) {
-		return Reactors.reactor(env, Environment.THREAD_POOL);
+		Reactor reactor = Reactors.reactor(env, Environment.THREAD_POOL);
+		reactor.receive($("thumbnail"), new GraphicsMagickThumbnailer(250));
+		return reactor;
 	}
 
 	@Bean
@@ -59,26 +57,43 @@ public class ImageThumbnailerApp {
 		return new CountDownLatch(1);
 	}
 
+	// tag::restapi[]
 	@Bean
 	public NetServer<FullHttpRequest, FullHttpResponse> restApi(Environment env,
 	                                                            ServerSocketOptions opts,
-	                                                            Reactor reactor) throws InterruptedException {
+	                                                            Reactor reactor,
+	                                                            CountDownLatch closeLatch) throws InterruptedException {
+		AtomicReference<Path> thumbnail = new AtomicReference<>();
+
 		NetServer<FullHttpRequest, FullHttpResponse> server = new TcpServerSpec<FullHttpRequest, FullHttpResponse>(
 				NettyTcpServer.class)
 				.env(env).dispatcher("sync").options(opts)
-				.consume(ch -> ch.when(Throwable.class, new HttpErrorHandler(ch))
-				                 .consume(req -> {
-					                 // event source requests
-					                 reactor.sendAndReceive(req.getUri(),
-					                                        Event.wrap(req),
-					                                        (Event<FullHttpResponse> ev) -> ch.send(ev.getData()));
-				                 }))
+				.consume(ch -> {
+					// attach an error handler
+					ch.when(Throwable.class, errorHandler(ch));
+
+					// filter requests by URI
+					Stream<FullHttpRequest> in = ch.in();
+
+					// serve image thumbnail to browser
+					in.filter((FullHttpRequest req) -> IMG_THUMBNAIL_URI.equals(req.getUri()))
+					  .consume(serveThumbnailImage(ch, thumbnail));
+
+					// take uploaded data and thumbnail it
+					in.filter((FullHttpRequest req) -> THUMBNAIL_REQ_URI.equals(req.getUri()))
+					  .consume(thumbnailImage(ch, thumbnail, reactor));
+
+					// shutdown this demo app
+					in.filter((FullHttpRequest req) -> "/shutdown".equals(req.getUri()))
+					  .consume(req -> closeLatch.countDown());
+				})
 				.get();
 
 		server.start().await();
 
 		return server;
 	}
+	// end::restapi[]
 
 	public static void main(String... args) throws InterruptedException {
 		ApplicationContext ctx = SpringApplication.run(ImageThumbnailerApp.class, args);
