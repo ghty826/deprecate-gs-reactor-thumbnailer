@@ -117,5 +117,5 @@ You should get a 301 response back from the server with the `Location` header po
 
 == Summary
 
-Although this is about as simple a multi-component setup as you can get, it demonstrates how to use Reactor to serve HTTP requests to power a REST API, how to distribute requests to a Reactor and use it as an event bus, and how to wire a response from an asynchronous tasks executed in a Reactor to an HTTP response for a client that's waiting on a result.
+Although this is about as simple a multi-component setup as you can get, it demonstrates how to use Reactor to serve HTTP requests to power a REST API, how to distribute requests to a Reactor and use it as an event bus, and how to wire a response from an asynchronous task executed in a Reactor to an HTTP response for a client that's waiting on a result.
 
