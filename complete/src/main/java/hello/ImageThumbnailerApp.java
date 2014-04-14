@@ -40,11 +40,8 @@ public class ImageThumbnailerApp {
   public Reactor reactor(Environment env) {
     Reactor reactor = Reactors.reactor(env, Environment.THREAD_POOL);
 
-    // uncomment if you don't have GraphicsMagick installed
-    //reactor.receive($("thumbnail"), new BufferedImageThumbnailer(250));
-
-    // comment out if you don't have GraphicsMagick installed
-    reactor.receive($("thumbnail"), new GraphicsMagickThumbnailer(250));
+    // Register our thumbnailer on the Reactor
+    reactor.receive($("thumbnail"), new BufferedImageThumbnailer(250));
 
     return reactor;
   }
@@ -57,20 +54,13 @@ public class ImageThumbnailerApp {
   }
 
   @Bean
-  public CountDownLatch closeLatch() {
-    return new CountDownLatch(1);
-  }
-
-  // tag::restapi[]
-  @Bean
   public NetServer<FullHttpRequest, FullHttpResponse> restApi(Environment env,
                                                               ServerSocketOptions opts,
                                                               Reactor reactor,
                                                               CountDownLatch closeLatch) throws InterruptedException {
     AtomicReference<Path> thumbnail = new AtomicReference<>();
 
-    NetServer<FullHttpRequest, FullHttpResponse> server = new TcpServerSpec<FullHttpRequest, FullHttpResponse>(
-        NettyTcpServer.class)
+    NetServer<FullHttpRequest, FullHttpResponse> server = new TcpServerSpec<FullHttpRequest, FullHttpResponse>(NettyTcpServer.class)
         .env(env).dispatcher("sync").options(opts)
         .consume(ch -> {
           // attach an error handler
@@ -97,7 +87,11 @@ public class ImageThumbnailerApp {
 
     return server;
   }
-  // end::restapi[]
+
+  @Bean
+  public CountDownLatch closeLatch() {
+    return new CountDownLatch(1);
+  }
 
   public static void main(String... args) throws InterruptedException {
     ApplicationContext ctx = SpringApplication.run(ImageThumbnailerApp.class, args);
@@ -105,8 +99,6 @@ public class ImageThumbnailerApp {
     // Reactor's TCP servers are non-blocking so we have to do something to keep from exiting the main thread
     CountDownLatch closeLatch = ctx.getBean(CountDownLatch.class);
     closeLatch.await();
-
-    ctx.getBean(NetServer.class).shutdown().await();
   }
 
 }

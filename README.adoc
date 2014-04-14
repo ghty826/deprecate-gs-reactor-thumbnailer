@@ -12,6 +12,9 @@ projects: [reactor]
 :EnableAutoConfiguration: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/autoconfigure/EnableAutoConfiguration.html
 :SpringApplication: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/SpringApplication.html
 :Path: http://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html
+:AffineTransform: http://docs.oracle.com/javase/8/docs/api/java/awt/geom/AffineTransform.html
+:BufferedImage: http://docs.oracle.com/javase/8/docs/api/java/awt/image/BufferedImage.html
+:ReactorMessagingGSG: https://spring.io/guides/gs/messaging-reactor/
 :toc:
 :icons: font
 :source-highlighter: prettify
@@ -48,36 +51,20 @@ include::initial/build.gradle[]
 
 include::https://raw.github.com/spring-guides/getting-started-macros/master/spring-boot-gradle-plugin.adoc[]
 
-You'll need to download an image from {CuteKittensGoogle}[Google Images] or {CuteKittensFlickr}[Flickr] or find a JPEG image you have on local hard drive. It should be larger than 250px on the long side, as this example will thumbnail images to 250px.
+You'll need to download an image from {CuteKittensGoogle}[Google Images] or {CuteKittensFlickr}[Flickr] or find a JPEG image you have on local hard drive. It should be larger than 250px on the long side.
 
 [[initial]]
-== Add Reactor support
+== Create the Thumbnailer
 
-The first thing you need to do is add Reactor support to your Spring Boot application. Reactor has an `@EnableRector` annotation that makes it easy to bootstrap Reactor components in a Spring `ApplicationContext`. Just add the annotation to your `@Configuration` class.
+To do the work of resizing the image, you'll register a function on a `Reactor` that will:
 
-`src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerApp.java`
-[source,java]
-----
-include::initial/src/main/java/hello/ImageThumbnailerApp.java
-----
+1. Accept a {Path}[Path] to an uploaded, full-size image.
+2. Resize this image to 250px on the long side.
+3. Return a `Path` to the resized (thumbnailed) image.
 
-This adds a shared `Environment` instance to your `ApplicationContext` so that you don't have to create one. It also provides some scanning componentry that will automatically wire beans marked with the `@Consumer` annotation to a `Reactor` by attaching a `Consumer` for each method annotated with the `@Selector` annotation.
+NOTE: There is another Getting Started Guide that discusses in more detail {ReactorMessagingGSG}[publishing and handling events in Reactor].
 
-== Create the Thumbnailers
-
-You want to delegate the actual thumbnailing of the image to different implementations depending on the environment you're running this example in. If you're on a UNIX-based system and have the excellent {GraphicsMagick}[GraphicsMagick] image manipulation software installed, then you can use that to do the thumbnailing. If not, then you can use the JDK tools for resizing an image--though the quality of those thumbnails will be drastically less than by using GraphicsMagick.
-
-Create a `Function<Event<Path>, Path>` implementation which will be registered with the Reactor using `Reactor.receive(Selector, Function<Event<T>, V>)`. Which version you implement and register will depend on whether you have GraphicsMagick installed or not.
-
-To implement the GraphicsMagick version, use the `gm4java` utility, which just calls the GraphicsMagick CLI to do the actual work.
-
-`src/main/java/hello/GraphicsMagickThumbnailer.java`
-[source,java]
-----
-include::complete/src/main/java/hello/GraphicsMagickThumbnailer.java[]
-----
-
-If you don't have GraphicsMagick installed on your machine, you can use the JDK's built-in Java2D image-handling library to do the resizing (expect a very ragged-looking result, though).
+Although the image quality will be quite poor, so we would never do this in a production thumbnailing service, we'll use the JDK's built-in Graphics2D engine to do the image thumbnailing. Specifically that means applying an `AffineTransform` to a `BufferedImage`.
 
 `src/main/java/hello/BufferedImageThumbnailer.java`
 [source,java]
@@ -85,13 +72,16 @@ If you don't have GraphicsMagick installed on your machine, you can use the JDK'
 include::complete/src/main/java/hello/BufferedImageThumbnailer.java[]
 ----
 
-== Wire up the REST API
+The thumbnailer implements Reactor's `Function` interface by implementing the `apply(Event<Path>)` method. It accepts an `Event` whose payload is the `Path` to the uploaded, full-size image. It then reads in the image using `ImageIO` and determines its current dimensions. It has to calculate the scale it needs to use to shrink the image from its present dimensions to 250px on the longest side. If the image is square or horizontal, it uses the image's width to determine that scale factor, otherwise it uses the image's height.
 
-You'll be reading images from the incoming POST requests and using a multi-threaded `Reactor` to asynchronously handle thumbnail requests.
+After creating a `Graphics2D` context, the thumbnailer applies a transformation to the image that scales it according to the scaling factor previously calculated to arrive at a dimension of 250px.
 
-Note: The handler expects raw binary data, not urlencoded like in an upload form. You'll need to use a command-line tool like `curl` to POST the image to the server in binary mode.
+Once the image is resized, it is written to disk and a `Path` returned that points to that thumbnailed image.
 
-First, create a stateless helper class that will provide the appropriate `Consumer` implementations for responding to the REST API requests.
+[[restapi]]
+== Create a REST API
+
+To handle incoming HTTP requests using Reactor, you need to create a helper class that contains static methods that return stateless consumers which accept the Netty `FullHttpRequest` object for the REST request. The helper methods should accept a Reactor `NetChannel` as a parameter so the `Consumer` can write out a Netty `FullHttpResponse` to the client.
 
 `src/main/java/hello/ImageThumbnailerRestApi.java`
 [source,java]
@@ -99,21 +89,94 @@ First, create a stateless helper class that will provide the appropriate `Consum
 include::complete/src/main/java/hello/ImageThumbnailerRestApi.java[]
 ----
 
-Now wire those handlers into the server using Reactor's `Stream.filter` method to filter out requests based on URI.
+NOTE: For simplicity's sake, the upload handler expects raw binary data, not urlencoded data like in an upload form. This means you'll need to use a command-line tool like `curl` to POST the image to the server in binary mode.
+
+== Configure the Reactor NetServer
+
+To bootstrap a Reactor `NetServer`, you need to add the appropriate options that configure Netty's pipeline to handle HTTP. Reactor has a special subclass of `ServerSocketOptions` that expose the Netty `ChannelPipeline` so you can add Netty built-in HTTP handlers.
+
+Also required are some housekeeping objects like a `CountDownLatch` to keep the main thread alive since Reactor's TCP support is fully asynchronous and would not prevent the test app from exiting immediately after starting the server.
 
 `src/main/java/hello/ImageThumbnailerApp.java`
 [source,java]
 ----
-include::complete/src/main/java/hello/ImageThumbnailerApp.java[tags=restapi]
+include::complete/src/main/java/hello/ImageThumbnailerApp.java[]
 ----
 
-== Finishing up
+The Reactor `NetServer` is configured in the `restApi()` `@Bean` method.
 
-Upload the image using a `curl` command like the following:
+NOTE: The `Environment` parameter referenced in that method is coming from Reactor's `@EnableReactor` bootstrap code. It's not something you need to create yourself. The `ServerSocketOptions`, `Reactor`, and `CountDownLatch` parameters are all configured in other `@Bean` methods to keep the server configuration code clean from unnecessary clutter.
 
-`curl -v -XPOST -H "Content-Type: image/jpeg" --data-binary @IMG_1984.jpg http://localhost:3000/thumbnail`
+Reactor's TCP support is channel-based. In order to respond to requests, you need to use the incoming `Stream` of HTTP requests and attach the consumers you're returning from the helper class you created in <<restapi>>.
+
+include::https://raw.github.com/spring-guides/getting-started-macros/master/build_an_executable_jar_mainhead.adoc[]
+
+:linkattrs:
+
+You can build a single executable JAR file that contains all the necessary dependencies, classes, and resources. This makes it easy to ship, version, and deploy the service as an application throughout the development lifecycle, across different environments, and so forth.
+
+[subs="attributes", role="has-copy-button"]
+....
+./gradlew build
+....
+
+Then you can run the JAR file:
+
+[subs="attributes", role="has-copy-button"]
+....
+java -jar build/libs/{project_id}-0.1.0.jar
+....
+
+If you are using Maven, you can run the application using `mvn spring-boot:run`. Or you can build the JAR file with `mvn clean package` and run the JAR by typing:
+
+[subs="attributes", role="has-copy-button"]
+....
+java -jar target/{project_id}-0.1.0.jar
+....
+
+The console should report the application starting.
+
+....
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v1.0.1.RELEASE)
+
+2014-04-14 18:10:55.456  INFO 64002 --- [ailerApp.main()] hello.ImageThumbnailerApp                : Starting ImageThumbnailerApp on dev.home with PID 64002 (/Users/jbrisbin/Development/Projects/reactor/master/gs-reactor-thumbnailer/complete/target/classes started by jbrisbin)
+2014-04-14 18:10:55.491  INFO 64002 --- [ailerApp.main()] s.c.a.AnnotationConfigApplicationContext : Refreshing org.springframework.context.annotation.AnnotationConfigApplicationContext@79ea1e26: startup date [Mon Apr 14 18:10:55 CDT 2014]; root of context hierarchy
+2014-04-14 18:10:56.276  INFO 64002 --- [entExecutor-1-1] reactor.net.netty.tcp.NettyTcpServer     : BIND /0:0:0:0:0:0:0:0:3000
+2014-04-14 18:10:56.350  INFO 64002 --- [ailerApp.main()] o.s.j.e.a.AnnotationMBeanExporter        : Registering beans for JMX exposure on startup
+2014-04-14 18:10:56.365  INFO 64002 --- [ailerApp.main()] hello.ImageThumbnailerApp                : Started ImageThumbnailerApp in 1.087 seconds (JVM running for 4.66)
+....
+
+
+When you see "Started ImageThumbnailerApp" in the console log, upload the image using a `curl` command like the following:
+
+`curl -v -XPOST -H "Content-Type: image/jpeg" --data-binary @cute_kittens.jpg http://localhost:3000/thumbnail`
 
 You should get a 301 response back from the server with the `Location` header pointing to the URI to pull up in your browser to see the thumbnailed image.
+
+....
+* About to connect() to localhost port 3000 (#0)
+*   Trying ::1...
+* connected
+* Connected to localhost (::1) port 3000 (#0)
+> POST /thumbnail HTTP/1.1
+> User-Agent: curl/7.24.0 (x86_64-apple-darwin12.0) libcurl/7.24.0 OpenSSL/0.9.8x zlib/1.2.5
+> Host: localhost:3000
+> Accept: */*
+> Content-Type: image/jpeg
+> Content-Length: 1002634
+> Expect: 100-continue
+>
+< HTTP/1.1 100 Continue
+< HTTP/1.1 301 Moved Permanently
+< Content-Length: 0
+< Location: /image/thumbnail.jpg
+....
 
 == Summary
 
