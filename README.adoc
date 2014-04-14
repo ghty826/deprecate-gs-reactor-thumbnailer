@@ -51,7 +51,7 @@ include::initial/build.gradle[]
 
 include::https://raw.github.com/spring-guides/getting-started-macros/master/spring-boot-gradle-plugin.adoc[]
 
-You'll need to download an image from {CuteKittensGoogle}[Google Images] or {CuteKittensFlickr}[Flickr] or find a JPEG image you have on local hard drive. It should be larger than 250px on the long side.
+You'll need to download an image from {CuteKittensGoogle}[Google Images] or {CuteKittensFlickr}[Flickr] or find a JPEG image you have on your local hard drive. It should be larger than 250px on the long side.
 
 [[initial]]
 == Create the Thumbnailer
