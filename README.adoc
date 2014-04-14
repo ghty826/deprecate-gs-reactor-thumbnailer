@@ -67,11 +67,11 @@ This adds a shared `Environment` instance to your `ApplicationContext` so that y
 
 You want to delegate the actual thumbnailing of the image to different implementations depending on the environment you're running this example in. If you're on a UNIX-based system and have the excellent {GraphicsMagick}[GraphicsMagick] image manipulation software installed, then you can use that to do the thumbnailing. If not, then you can use the JDK tools for resizing an image--though the quality of those thumbnails will be drastically less than by using GraphicsMagick.
 
-Creating a `Function<Event<Path>, Path>` implementation which will be registered with the Reactor using `Reactor.receive(Selector, Function<Event<T>, V>)`. Which version you implement and register will depend on whether you have GraphicsMagick installed or not.
+Create a `Function<Event<Path>, Path>` implementation which will be registered with the Reactor using `Reactor.receive(Selector, Function<Event<T>, V>)`. Which version you implement and register will depend on whether you have GraphicsMagick installed or not.
 
 To implement the GraphicsMagick version, use the `gm4java` utility, which just calls the GraphicsMagick CLI to do the actual work.
 
-`src/main/java/hello/service/GraphicsMagickThumbnailer.java`
+`src/main/java/hello/GraphicsMagickThumbnailer.java`
 [source,java]
 ----
 include::complete/src/main/java/hello/GraphicsMagickThumbnailer.java[]
