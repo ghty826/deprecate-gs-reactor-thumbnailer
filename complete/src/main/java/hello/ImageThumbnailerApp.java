@@ -1,11 +1,9 @@
-package org.projectreactor.examples.thumbnailer;
+package hello;
 
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
-import org.projectreactor.examples.thumbnailer.service.BufferedImageThumbnailer;
-import org.projectreactor.examples.thumbnailer.service.GraphicsMagickThumbnailer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ApplicationContext;
@@ -27,7 +25,6 @@ import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.projectreactor.examples.thumbnailer.ImageThumbnailerRestApi.*;
 import static reactor.event.selector.Selectors.$;
 
 /**
@@ -77,18 +74,18 @@ public class ImageThumbnailerApp {
 				.env(env).dispatcher("sync").options(opts)
 				.consume(ch -> {
 					// attach an error handler
-					ch.when(Throwable.class, errorHandler(ch));
+					ch.when(Throwable.class, ImageThumbnailerRestApi.errorHandler(ch));
 
 					// filter requests by URI
 					Stream<FullHttpRequest> in = ch.in();
 
 					// serve image thumbnail to browser
-					in.filter((FullHttpRequest req) -> IMG_THUMBNAIL_URI.equals(req.getUri()))
-					  .consume(serveThumbnailImage(ch, thumbnail));
+					in.filter((FullHttpRequest req) -> ImageThumbnailerRestApi.IMG_THUMBNAIL_URI.equals(req.getUri()))
+					  .consume(ImageThumbnailerRestApi.serveThumbnailImage(ch, thumbnail));
 
 					// take uploaded data and thumbnail it
-					in.filter((FullHttpRequest req) -> THUMBNAIL_REQ_URI.equals(req.getUri()))
-					  .consume(thumbnailImage(ch, thumbnail, reactor));
+					in.filter((FullHttpRequest req) -> ImageThumbnailerRestApi.THUMBNAIL_REQ_URI.equals(req.getUri()))
+					  .consume(ImageThumbnailerRestApi.thumbnailImage(ch, thumbnail, reactor));
 
 					// shutdown this demo app
 					in.filter((FullHttpRequest req) -> "/shutdown".equals(req.getUri()))

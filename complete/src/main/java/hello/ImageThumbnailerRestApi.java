@@ -1,4 +1,4 @@
-package org.projectreactor.examples.thumbnailer;
+package hello;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.*;

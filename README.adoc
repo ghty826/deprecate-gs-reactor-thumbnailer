@@ -58,19 +58,7 @@ The first thing you need to do is add Reactor support to your Spring Boot applic
 `src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerApp.java`
 [source,java]
 ----
-import reactor.spring.context.config.EnableReactor;
-
-@EnableAutoConfiguration
-@Configuration
-@ComponentScan
-@EnableReactor
-public class ImageThumbnailerApp {
-
-	public static void main(String... args) throws InterruptedException {
-		ApplicationContext ctx = SpringApplication.run(ImageThumbnailerApp.class, args);
-	}
-
-}
+include::initial/src/main/java/hello/ImageThumbnailerApp.java
 ----
 
 This adds a shared `Environment` instance to your `ApplicationContext` so that you don't have to create one. It also provides some scanning componentry that will automatically wire beans marked with the `@Consumer` annotation to a `Reactor` by attaching a `Consumer` for each method annotated with the `@Selector` annotation.
@@ -83,18 +71,18 @@ Creating a `Function<Event<Path>, Path>` implementation which will be registered
 
 To implement the GraphicsMagick version, use the `gm4java` utility, which just calls the GraphicsMagick CLI to do the actual work.
 
-`src/main/java/org/projectreactor/examples/thumbnailer/service/GraphicsMagickThumbnailer.java`
+`src/main/java/hello/service/GraphicsMagickThumbnailer.java`
 [source,java]
 ----
-include::complete/src/main/java/org/projectreactor/examples/thumbnailer/service/GraphicsMagickThumbnailer.java[]
+include::complete/src/main/java/hello/GraphicsMagickThumbnailer.java[]
 ----
 
 If you don't have GraphicsMagick installed on your machine, you can use the JDK's built-in Java2D image-handling library to do the resizing (expect a very ragged-looking result, though).
 
-`src/main/java/org/projectreactor/examples/thumbnailer/service/BufferedImageThumbnailer.java`
+`src/main/java/hello/BufferedImageThumbnailer.java`
 [source,java]
 ----
-include::complete/src/main/java/org/projectreactor/examples/thumbnailer/service/BufferedImageThumbnailer.java[]
+include::complete/src/main/java/hello/BufferedImageThumbnailer.java[]
 ----
 
 == Wire up the REST API
@@ -105,18 +93,18 @@ Note: The handler expects raw binary data, not urlencoded like in an upload form
 
 First, create a stateless helper class that will provide the appropriate `Consumer` implementations for responding to the REST API requests.
 
-`src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerRestApi.java`
+`src/main/java/hello/ImageThumbnailerRestApi.java`
 [source,java]
 ----
-include::complete/src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerRestApi.java[]
+include::complete/src/main/java/hello/ImageThumbnailerRestApi.java[]
 ----
 
 Now wire those handlers into the server using Reactor's `Stream.filter` method to filter out requests based on URI.
 
-`src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerApp.java`
+`src/main/java/hello/ImageThumbnailerApp.java`
 [source,java]
 ----
-include::complete/src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerApp.java[tags=restapi]
+include::complete/src/main/java/hello/ImageThumbnailerApp.java[tags=restapi]
 ----
 
 == Finishing up
