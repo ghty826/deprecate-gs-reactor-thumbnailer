@@ -4,6 +4,7 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
+import org.projectreactor.examples.thumbnailer.service.BufferedImageThumbnailer;
 import org.projectreactor.examples.thumbnailer.service.GraphicsMagickThumbnailer;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -41,7 +42,13 @@ public class ImageThumbnailerApp {
 	@Bean
 	public Reactor reactor(Environment env) {
 		Reactor reactor = Reactors.reactor(env, Environment.THREAD_POOL);
+
+		// uncomment if you don't have GraphicsMagick installed
+		//reactor.receive($("thumbnail"), new BufferedImageThumbnailer(250));
+
+		// comment out if you don't have GraphicsMagick installed
 		reactor.receive($("thumbnail"), new GraphicsMagickThumbnailer(250));
+
 		return reactor;
 	}
 
