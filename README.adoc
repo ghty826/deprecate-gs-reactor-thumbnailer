@@ -64,7 +64,7 @@ To do the work of resizing the image, you'll register a function on a `Reactor` 
 
 NOTE: There is another Getting Started Guide that discusses in more detail {ReactorMessagingGSG}[publishing and handling events in Reactor].
 
-Although the image quality will be quite poor, so we would never do this in a production thumbnailing service, we'll use the JDK's built-in Graphics2D engine to do the image thumbnailing. Specifically that means applying an `AffineTransform` to a `BufferedImage`.
+Although the image quality will be quite poor, for simplicity's sake you can use the JDK's built-in Graphics2D engine to do the image thumbnailing. Specifically that means applying an {AffineTransform}[`AffineTransform`] to a {BufferedImage}[`BufferedImage`].
 
 `src/main/java/hello/BufferedImageThumbnailer.java`
 [source,java]
@@ -76,12 +76,14 @@ The thumbnailer implements Reactor's `Function` interface by implementing the `a
 
 After creating a `Graphics2D` context, the thumbnailer applies a transformation to the image that scales it according to the scaling factor previously calculated to arrive at a dimension of 250px.
 
+NOTE: If you have the {GraphicsMagick}[GraphicsMagick] package installed on your machine and want a higher-quality thumbnail, you can use the alternative implementation of the `BufferedImageThumbnailer` included in this guide: link:complete/src/main/java/hello/BufferedImageThumbnailer.java[GraphicsMagickThumbnailer.java]
+
 Once the image is resized, it is written to disk and a `Path` returned that points to that thumbnailed image.
 
 [[restapi]]
 == Create a REST API
 
-To handle incoming HTTP requests using Reactor, you need to create a helper class that contains static methods that return stateless consumers which accept the Netty `FullHttpRequest` object for the REST request. The helper methods should accept a Reactor `NetChannel` as a parameter so the `Consumer` can write out a Netty `FullHttpResponse` to the client.
+To handle incoming HTTP requests using Reactor, you need to create a helper class. Create static methods that return stateless consumers which accept the Netty `FullHttpRequest` object for the REST request. The helper methods should accept as parameters a Reactor `NetChannel` to write a response to and an `AtomicReference` to the shared thumbnail `Path`.
 
 `src/main/java/hello/ImageThumbnailerRestApi.java`
 [source,java]
