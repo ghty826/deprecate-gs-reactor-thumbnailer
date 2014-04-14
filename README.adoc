@@ -5,7 +5,9 @@ projects: [reactor]
 :spring_version: current
 :java_version: 1.8
 :spring_boot_version: 1.0.1.RELEASE
-:GraphicsMagick: http://www.graphicsmagick.org/
+:GraphicsMagick: http://www.graphicsmagick.org/README.html
+:CuteKittensGoogle: https://www.google.com/search?q=cute+kittens&tbm=isch
+:CuteKittensFlickr: https://www.flickr.com/search/?q=cute+kittens
 :Component: http://docs.spring.io/spring/docs/{spring_version}/javadoc-api/org/springframework/stereotype/Component.html
 :EnableAutoConfiguration: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/autoconfigure/EnableAutoConfiguration.html
 :SpringApplication: http://docs.spring.io/spring-boot/docs/{spring_boot_version}/api/org/springframework/boot/SpringApplication.html
@@ -46,12 +48,12 @@ include::initial/build.gradle[]
 
 include::https://raw.github.com/spring-guides/getting-started-macros/master/spring-boot-gradle-plugin.adoc[]
 
-You'll need to download an image from Google Images or Flickr or find a JPEG image you have on local hard drive. It should be larger than 250px on the long side, as this example will thumbnail images to 250px.
+You'll need to download an image from {CuteKittensGoogle}[Google Images] or {CuteKittensFlickr}[Flickr] or find a JPEG image you have on local hard drive. It should be larger than 250px on the long side, as this example will thumbnail images to 250px.
 
 [[initial]]
 == Add Reactor support
 
-The first thing we need to do is add Reactor support to our Spring Boot application. Reactor has an `@EnableRector` annotation that makes it easy to bootstrap Reactor components in a Spring `ApplicationContext`. Just add the annotation to your `@Configuration` class.
+The first thing you need to do is add Reactor support to your Spring Boot application. Reactor has an `@EnableRector` annotation that makes it easy to bootstrap Reactor components in a Spring `ApplicationContext`. Just add the annotation to your `@Configuration` class.
 
 `src/main/java/org/projectreactor/examples/thumbnailer/ImageThumbnailerApp.java`
 [source,java]
@@ -75,11 +77,11 @@ This adds a shared `Environment` instance to your `ApplicationContext` so that y
 
 == Create the Thumbnailers
 
-We want to delegate the actual thumbnailing of the image to different implementations depending on the environment we're running this example in. If you're on a UNIX-based system and have the {GraphicsMagick}[GraphicsMagick] programs installed, then we can use that excellent image manipulation software to do the thumbnails. If not, then we can use the JDK tools for resizing an image--though the quality of those thumbnails will be drastically less than by using GraphicsMagick.
+You want to delegate the actual thumbnailing of the image to different implementations depending on the environment you're running this example in. If you're on a UNIX-based system and have the excellent {GraphicsMagick}[GraphicsMagick] image manipulation software installed, then you can use that to do the thumbnailing. If not, then you can use the JDK tools for resizing an image--though the quality of those thumbnails will be drastically less than by using GraphicsMagick.
 
-We'll use Reactor's built-in `Function<T,V>` interface to provide two variations on thumbnailing: one to accommodate a system with the GraphicsMagick utilities, and one to accommodate a system without.
+Creating a `Function<Event<Path>, Path>` implementation which will be registered with the Reactor using `Reactor.receive(Selector, Function<Event<T>, V>)`. Which version you implement and register will depend on whether you have GraphicsMagick installed or not.
 
-To implement the GraphicsMagick version, we'll use the `gm4java` utility, which just calls the GraphicsMagick CLI to do the actual work.
+To implement the GraphicsMagick version, use the `gm4java` utility, which just calls the GraphicsMagick CLI to do the actual work.
 
 `src/main/java/org/projectreactor/examples/thumbnailer/service/GraphicsMagickThumbnailer.java`
 [source,java]
@@ -97,9 +99,9 @@ include::complete/src/main/java/org/projectreactor/examples/thumbnailer/service/
 
 == Wire up the REST API
 
-We'll be reading images from our incoming POST requests and using a multi-threaded `Reactor` to asynchronously handle thumbnail requests.
+You'll be reading images from the incoming POST requests and using a multi-threaded `Reactor` to asynchronously handle thumbnail requests.
 
-Note: Our handler expects raw binary data, not urlencoded like in an upload form. You'll need to use a command-line tool like `curl` to POST the image to the server in binary mode.
+Note: The handler expects raw binary data, not urlencoded like in an upload form. You'll need to use a command-line tool like `curl` to POST the image to the server in binary mode.
 
 First, create a stateless helper class that will provide the appropriate `Consumer` implementations for responding to the REST API requests.
 
