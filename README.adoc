@@ -14,7 +14,7 @@ projects: [reactor]
 :Path: http://docs.oracle.com/javase/8/docs/api/java/nio/file/Path.html
 :AffineTransform: http://docs.oracle.com/javase/8/docs/api/java/awt/geom/AffineTransform.html
 :BufferedImage: http://docs.oracle.com/javase/8/docs/api/java/awt/image/BufferedImage.html
-:ReactorMessagingGSG: https://spring.io/guides/gs/messaging-reactor/
+:ReactorMessagingGSG: link:guides/gs/messaging-reactor/
 :toc:
 :icons: font
 :source-highlighter: prettify
