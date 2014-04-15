@@ -23,7 +23,7 @@ This guide walks you through the process of creating a RESTful image thumbnailin
 
 == What you'll build
 
-You'll build a service that thumbnails an uploaded JPEG image and stores it for serving to a web browser.
+You'll build a service that thumbnails an uploaded JPEG image and stores it for serving to a web browser. You'll use Reactor's TCP support (specifically, the Netty implementation) in order to provide excellent scalability in highly-concurrent deployments. Although similar systems could be built in a more traditional MVC style, it's not very straightforward to harness the fully non-blocking capabilities that are only available in Servlet 3.1 and later containers.
 
 
 == What you'll need
