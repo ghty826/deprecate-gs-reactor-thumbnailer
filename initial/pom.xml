@@ -52,9 +52,9 @@
   <repositories>
     <repository>
       <id>spring-snapshots</id>
-      <url>https://repo.spring.io/libs-snapshot</url>
+      <url>https://repo.spring.io/libs-milestone</url>
       <snapshots>
-        <enabled>true</enabled>
+        <enabled>false</enabled>
       </snapshots>
     </repository>
   </repositories>
