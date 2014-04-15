@@ -1,5 +1,5 @@
 ---
-tags: [reactor, rest, netty]
+tags: [reactor, rest, netty, microservice]
 projects: [reactor]
 ---
 :spring_version: current
