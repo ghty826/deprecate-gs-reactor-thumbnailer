@@ -15,6 +15,7 @@ projects: [reactor]
 :AffineTransform: http://docs.oracle.com/javase/8/docs/api/java/awt/geom/AffineTransform.html
 :BufferedImage: http://docs.oracle.com/javase/8/docs/api/java/awt/image/BufferedImage.html
 :ReactorMessagingGSG: link:guides/gs/messaging-reactor/
+:GraphicsMagickThumbnailer: https://github.com/spring-guides/gs-reactor-thumbnailer/blob/master/complete/src/main/java/hello/GraphicsMagickThumbnailer.java
 :toc:
 :icons: font
 :source-highlighter: prettify
@@ -76,7 +77,7 @@ The thumbnailer implements Reactor's `Function` interface by implementing the `a
 
 After creating a `Graphics2D` context, the thumbnailer applies a transformation to the image that scales it according to the scaling factor previously calculated to arrive at a dimension of 250px.
 
-NOTE: If you have the {GraphicsMagick}[GraphicsMagick] package installed on your machine and want a higher-quality thumbnail, you can use the alternative implementation of the `BufferedImageThumbnailer` included in this guide: link:complete/src/main/java/hello/BufferedImageThumbnailer.java[GraphicsMagickThumbnailer.java]
+NOTE: If you have the {GraphicsMagick}[GraphicsMagick] package installed on your machine and want a higher-quality thumbnail, you can use the alternative implementation of the `BufferedImageThumbnailer` included in this guide: {GraphicsMagickThumbnailer}[GraphicsMagickThumbnailer.java]
 
 Once the image is resized, it is written to disk and a `Path` returned that points to that thumbnailed image.
 
