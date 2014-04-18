@@ -32,8 +32,8 @@ dependencies {
   compile "org.springframework.boot:spring-boot-starter"
 
   // Reactor
-  compile "org.projectreactor:reactor-net:$reactorVersion",
-      "org.projectreactor.spring:reactor-spring-context:$reactorVersion"
+  compile "org.projectreactor:reactor-net:$reactorVersion"
+  compile "org.projectreactor.spring:reactor-spring-context:$reactorVersion"
 
   // GraphicsMagick
   compile "com.sharneng:gm4java:1.1.0"
