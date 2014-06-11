@@ -7,7 +7,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>1.0.2.RELEASE</version>
+    <version>1.1.0.RELEASE</version>
   </parent>
 
   <groupId>org.projectreactor.examples</groupId>
@@ -51,11 +51,8 @@
 
   <repositories>
     <repository>
-      <id>spring-snapshots</id>
+      <id>spring-releases</id>
       <url>https://repo.spring.io/libs-milestone</url>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
     </repository>
   </repositories>
 
