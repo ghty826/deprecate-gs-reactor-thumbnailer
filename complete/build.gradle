@@ -1,16 +1,16 @@
 ext {
-  reactorVersion = '1.1.0.M3'
+    reactorVersion = '1.1.0.M3'
 }
 
 buildscript {
-  repositories {
-    maven { url "http://repo.spring.io/libs-release" }
-    mavenLocal()
+    repositories {
+        maven { url "http://repo.spring.io/libs-release" }
+        mavenLocal()
         mavenCentral()
-  }
-  dependencies {
-    classpath("org.springframework.boot:spring-boot-gradle-plugin:1.1.1.RELEASE")
-  }
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.1.1.RELEASE")
+    }
 }
 
 apply plugin: 'java'
@@ -19,28 +19,28 @@ apply plugin: 'idea'
 apply plugin: 'spring-boot'
 
 jar {
-  baseName = 'gs-reactor-thumbnailer'
-  version = '0.1.0'
+    baseName = 'gs-reactor-thumbnailer'
+    version = '0.1.0'
 }
 
 repositories {
     mavenLocal()
-  mavenCentral()
-  maven { url "http://repo.spring.io/libs-release" }
+    mavenCentral()
+    maven { url "http://repo.spring.io/libs-milestone" }
 }
 
 dependencies {
-  // Spring Boot
-  compile "org.springframework.boot:spring-boot-starter"
+    // Spring Boot
+    compile "org.springframework.boot:spring-boot-starter"
 
-  // Reactor
-  compile "org.projectreactor:reactor-net:$reactorVersion"
-  compile "org.projectreactor.spring:reactor-spring-context:$reactorVersion"
+    // Reactor
+    compile "org.projectreactor:reactor-net:$reactorVersion"
+    compile "org.projectreactor.spring:reactor-spring-context:$reactorVersion"
 
-  // GraphicsMagick
-  compile "com.sharneng:gm4java:1.1.0"
+    // GraphicsMagick
+    compile "com.sharneng:gm4java:1.1.0"
 }
 
 task wrapper(type: Wrapper) {
-  gradleVersion = '1.11'
+    gradleVersion = '1.11'
 }
