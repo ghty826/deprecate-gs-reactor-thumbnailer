@@ -4,7 +4,7 @@ projects: [reactor]
 ---
 :spring_version: current
 :java_version: 1.8
-:spring_boot_version: 1.1.4.RELEASE
+:spring_boot_version: 1.1.5.RELEASE
 :GraphicsMagick: http://www.graphicsmagick.org/README.html
 :CuteKittensGoogle: https://www.google.com/search?q=cute+kittens&tbm=isch
 :CuteKittensFlickr: https://www.flickr.com/search/?q=cute+kittens
