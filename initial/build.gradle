@@ -28,6 +28,9 @@ repositories {
     maven { url "https://repo.spring.io/libs-milestone" }
 }
 
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
 dependencies {
     // Spring Boot
     compile "org.springframework.boot:spring-boot-starter"
