@@ -29,6 +29,7 @@ You'll build a service that thumbnails an uploaded JPEG image and stores it for 
 
 == What you'll need
 
+:java_version: 1.8
 include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/prereq_editor_jdk_buildtools.adoc[]
 
 include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/how_to_complete_this_guide.adoc[]
