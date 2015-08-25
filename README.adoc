@@ -179,3 +179,6 @@ Although this is about as simple a multi-component setup as you can get, this gu
 - How to distribute requests to a Reactor and use it as an event bus
 - How to send the response from an asynchronous task executed in a Reactor to an HTTP  client that's waiting on a result
 
+
+include::https://raw.githubusercontent.com/spring-guides/getting-started-macros/master/footer.adoc[]
+
