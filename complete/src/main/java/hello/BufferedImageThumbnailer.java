@@ -1,17 +1,19 @@
 package hello;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import reactor.event.Event;
-import reactor.function.Function;
-
-import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import javax.imageio.ImageIO;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import reactor.bus.Event;
+import reactor.fn.Function;
 
 /**
  * Uses the built-in JDK tooling for resizing an image.

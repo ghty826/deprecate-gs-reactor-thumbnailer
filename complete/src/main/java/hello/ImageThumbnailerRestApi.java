@@ -1,21 +1,21 @@
 package hello;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.handler.codec.http.*;
-import reactor.core.Reactor;
-import reactor.event.Event;
-import reactor.function.Consumer;
-import reactor.net.NetChannel;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpMethod;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.HttpVersion;
+import reactor.bus.Event;
+import reactor.fn.Consumer;
+import reactor.io.net.http.model.HttpHeaders;
 
 /**
  * A helper class that contains the necessary Consumers for handling HTTP requests.

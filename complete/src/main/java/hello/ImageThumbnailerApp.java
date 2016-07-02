@@ -1,31 +1,27 @@
 package hello;
 
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpServerCodec;
+import java.nio.file.Path;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import reactor.core.Environment;
-import reactor.core.Reactor;
-import reactor.core.composable.Stream;
-import reactor.core.spec.Reactors;
-import reactor.net.NetServer;
-import reactor.net.config.ServerSocketOptions;
-import reactor.net.netty.NettyServerSocketOptions;
-import reactor.net.netty.tcp.NettyTcpServer;
-import reactor.net.tcp.spec.TcpServerSpec;
+
+import io.netty.handler.codec.http.FullHttpRequest;
+import io.netty.handler.codec.http.FullHttpResponse;
+import io.netty.handler.codec.http.HttpObjectAggregator;
+import io.netty.handler.codec.http.HttpServerCodec;
+import reactor.Environment;
+import reactor.io.net.Spec.TcpServerSpec;
+import reactor.io.net.config.ServerSocketOptions;
+import reactor.io.net.impl.netty.NettyServerSocketOptions;
+import reactor.io.net.impl.netty.tcp.NettyTcpServer;
+import reactor.rx.Stream;
 import reactor.spring.context.config.EnableReactor;
-
-import java.nio.file.Path;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static reactor.event.selector.Selectors.$;
 
 /**
  * Simple Spring Boot app to start a Reactor+Netty-based REST API server for thumbnailing uploaded images.

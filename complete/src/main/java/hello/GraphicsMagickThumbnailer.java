@@ -1,16 +1,18 @@
 package hello;
 
+import java.awt.image.BufferedImage;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import javax.imageio.ImageIO;
+
 import org.gm4java.engine.support.GMConnectionPoolConfig;
 import org.gm4java.engine.support.PooledGMService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import reactor.event.Event;
-import reactor.function.Function;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import reactor.bus.Event;
+import reactor.fn.Function;
 
 /**
  * Uses the GraphicsMagick package to do the image resizing.
