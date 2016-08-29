@@ -40,6 +40,3 @@ dependencies {
     compile "com.sharneng:gm4java:1.1.0"
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
-}
